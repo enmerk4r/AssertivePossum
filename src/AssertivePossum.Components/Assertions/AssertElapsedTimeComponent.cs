@@ -15,6 +15,7 @@ public class AssertElapsedTimeComponent : GH_Component
     }
 
     public override Guid ComponentGuid => new("a1b2c3d4-000b-4000-8000-00000000000b");
+    public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-elapsed-time.png")!);

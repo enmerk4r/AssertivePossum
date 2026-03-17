@@ -15,6 +15,7 @@ public class AssertInRangeComponent : GH_Component
     }
 
     public override Guid ComponentGuid => new("a1b2c3d4-0009-4000-8000-000000000009");
+    public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-in-range.png")!);

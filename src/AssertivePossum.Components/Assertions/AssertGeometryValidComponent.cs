@@ -16,6 +16,7 @@ public class AssertGeometryValidComponent : GH_Component
     }
 
     public override Guid ComponentGuid => new("a1b2c3d4-000a-4000-8000-00000000000a");
+    public override GH_Exposure Exposure => GH_Exposure.quinary;
 
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-geometry-valid.png")!);

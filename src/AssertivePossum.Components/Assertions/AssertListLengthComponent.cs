@@ -16,6 +16,7 @@ public class AssertListLengthComponent : GH_Component
     }
 
     public override Guid ComponentGuid => new("a1b2c3d4-0007-4000-8000-000000000007");
+    public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-list-length.png")!);
