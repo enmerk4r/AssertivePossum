@@ -1,0 +1,22 @@
+name: assertive-possum
+version: {{VERSION}}
+authors:
+  - Sergey Pigach
+description: >
+  Assertive Possum is an integration testing framework for Grasshopper.
+  It lets plugin developers author test cases as native Grasshopper definitions,
+  execute them against a Rhino.Compute instance, and collect structured pass/fail
+  reports. Includes assertion components, a test runner, and report exporters
+  (JUnit XML, TAP, JSON, Markdown).
+keywords:
+- testing
+- test
+- assert
+- assertion
+- integration
+- ci
+- compute
+- junit
+- tap
+- report
+- validation
