@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <NoWarn>NU1701</NoWarn>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AssertivePossum.Components</RootNamespace>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+<PackageReference Include="Grasshopper" Version="8.0.23304.9001">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <ProjectReference Include="..\AssertivePossum.Goo\AssertivePossum.Goo.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-contains.png" LogicalName="Icons.assert-contains.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-elapsed-time.png" LogicalName="Icons.assert-elapsed-time.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-equal.png" LogicalName="Icons.assert-equal.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-false.png" LogicalName="Icons.assert-false.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-geometry-valid.png" LogicalName="Icons.assert-geometry-valid.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-in-range.png" LogicalName="Icons.assert-in-range.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-list-length.png" LogicalName="Icons.assert-list-length.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-not-equal.png" LogicalName="Icons.assert-not-equal.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-not-null.png" LogicalName="Icons.assert-not-null.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-null.png" LogicalName="Icons.assert-null.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_assert-true.png" LogicalName="Icons.assert-true.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_report-to-json.png" LogicalName="Icons.report-to-json.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_report-to-junit.png" LogicalName="Icons.report-to-junit.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_report-to-markdown.png" LogicalName="Icons.report-to-markdown.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_report-to-tap.png" LogicalName="Icons.report-to-tap.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_runner.png" LogicalName="Icons.runner.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons-17.png" LogicalName="Icons.report-viewer.png" />
+    <EmbeddedResource Include="..\..\assets\logo_24x24.png" LogicalName="Icons.logo.png" />
+  </ItemGroup>
+  <Target Name="RenameToGha" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)$(AssemblyName).gha" />
+  </Target>
+
+  <Target Name="CreateYakPackage" AfterTargets="RenameToGha" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -File &quot;$(ProjectDir)..\..\Yak\Build-YakPackage.ps1&quot; -Configuration &quot;$(Configuration)&quot; -Version &quot;$(Version)&quot; -OutputDir &quot;$(TargetDir.TrimEnd('\'))&quot; -ProjectDir &quot;$(ProjectDir.TrimEnd('\'))&quot;" />
+  </Target>
+</Project>
