@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Attributes;
+using Grasshopper.Kernel.Data;
+using Grasshopper.Kernel.Types;
 using Grasshopper.GUI;
 using Grasshopper.GUI.Canvas;
 using AssertivePossum.Goo;
@@ -33,29 +35,62 @@ public class ReportViewerComponent : GH_Component
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddGenericParameter("Report", "R", "Test report to display.", GH_ParamAccess.item);
+        pManager.AddGenericParameter("Report", "R", "Test reports to display.", GH_ParamAccess.tree);
+        pManager[0].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddIntegerParameter("Passed", "P", "Number of passed tests.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Failed", "F", "Number of failed tests.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Errors", "E", "Number of errored tests.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Passed", "P", "Names of passed tests.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Failed", "F", "Names of failed tests.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Errors", "E", "Names of errored tests.", GH_ParamAccess.list);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        TestReportGoo? reportGoo = null;
-        if (!DA.GetData(0, ref reportGoo) || reportGoo?.Value is null)
+        DA.GetDataTree(0, out GH_Structure<IGH_Goo> tree);
+
+        var allResults = new List<(string Prefix, TestResult Result)>();
+
+        if (tree is not null)
+        {
+            foreach (var branch in tree.Branches)
+            {
+                foreach (var item in branch)
+                {
+                    if (item is TestReportGoo reportGoo && reportGoo.Value is not null)
+                    {
+                        var report = reportGoo.Value;
+                        string prefix = string.IsNullOrEmpty(report.SourceFile)
+                            ? ""
+                            : System.IO.Path.GetFileNameWithoutExtension(report.SourceFile);
+
+                        foreach (var result in report.Results)
+                            allResults.Add((prefix, result));
+                    }
+                }
+            }
+        }
+
+        if (allResults.Count == 0)
         {
             _currentReport = null;
             return;
         }
 
-        _currentReport = reportGoo.Value;
-        DA.SetData(0, _currentReport.Passed);
-        DA.SetData(1, _currentReport.Failed);
-        DA.SetData(2, _currentReport.Errors);
+        // Build aggregate report for the donut chart
+        _currentReport = new TestReport
+        {
+            Timestamp = DateTime.Now,
+            Results = allResults.Select(r => r.Result).ToList()
+        };
+
+        string FormatName((string Prefix, TestResult r) item) =>
+            string.IsNullOrEmpty(item.Prefix) ? item.r.TestName : $"{item.Prefix}\\{item.r.TestName}";
+
+        DA.SetDataList(0, allResults.Where(r => r.Result.Status == TestStatus.Pass).Select(FormatName).ToList());
+        DA.SetDataList(1, allResults.Where(r => r.Result.Status == TestStatus.Fail).Select(FormatName).ToList());
+        DA.SetDataList(2, allResults.Where(r => r.Result.Status == TestStatus.Error).Select(FormatName).ToList());
     }
 
     internal TestReport? CurrentReport => _currentReport;
@@ -71,11 +106,17 @@ public class ReportViewerComponent : GH_Component
         private const float CornerRadius = 3f;
         private const float HighlightHeight = 8f;
 
-        // GH standard colors (normal palette, unselected)
+        // GH standard colors (normal)
         private static readonly Color FillColor = Color.FromArgb(255, 200, 200, 200);
         private static readonly Color EdgeColor = Color.FromArgb(255, 50, 50, 50);
         private static readonly Color TextColor = Color.FromArgb(255, 0, 0, 0);
         private static readonly Color HighlightColor = Color.FromArgb(60, 255, 255, 255);
+        private static readonly Color EmptyDonutColor = Color.FromArgb(255, 200, 200, 200);
+
+        // GH standard colors (selected)
+        private static readonly Color SelectedFillColor = Color.FromArgb(255, 178, 210, 155);
+        private static readonly Color SelectedEdgeColor = Color.FromArgb(255, 50, 100, 50);
+        private static readonly Color SelectedEmptyDonutColor = Color.FromArgb(255, 178, 210, 155);
 
         public ReportViewerAttributes(ReportViewerComponent owner) : base(owner) { }
 
@@ -129,11 +170,7 @@ public class ReportViewerComponent : GH_Component
                 return;
             }
 
-            if (channel != GH_CanvasChannel.Objects)
-            {
-                base.Render(canvas, graphics, channel);
-                return;
-            }
+            if (channel != GH_CanvasChannel.Objects) return;
 
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
@@ -150,6 +187,11 @@ public class ReportViewerComponent : GH_Component
             float boxTop = donutCenterY - boxHeight / 2f;
 
             var boxRect = new RectangleF(boxLeft, boxTop, BoxWidth, boxHeight);
+
+            bool selected = Selected;
+            var fillColor = selected ? SelectedFillColor : FillColor;
+            var edgeColor = selected ? SelectedEdgeColor : EdgeColor;
+            var emptyDonutColor = selected ? SelectedEmptyDonutColor : EmptyDonutColor;
 
             // 1. Draw input grip
             using (var gripBrush = new SolidBrush(Color.White))
@@ -177,7 +219,7 @@ public class ReportViewerComponent : GH_Component
             // 3. Draw box body (GH-style capsule, on top of output grips)
             using (var boxPath = RoundedRect(boxRect, CornerRadius))
             {
-                using (var fillBrush = new SolidBrush(FillColor))
+                using (var fillBrush = new SolidBrush(fillColor))
                     graphics.FillPath(fillBrush, boxPath);
 
                 var highlightRect = new RectangleF(boxRect.X, boxRect.Y, boxRect.Width, HighlightHeight);
@@ -190,7 +232,7 @@ public class ReportViewerComponent : GH_Component
                     graphics.Clip = oldClip;
                 }
 
-                using (var edgePen = new Pen(EdgeColor, 1f))
+                using (var edgePen = new Pen(edgeColor, 1f))
                     graphics.DrawPath(edgePen, boxPath);
             }
 
@@ -214,7 +256,7 @@ public class ReportViewerComponent : GH_Component
             if (report is null || report.Total == 0)
             {
                 DrawDonutSegment(graphics, donutCenterX, donutCenterY, outerRadius, innerRadius,
-                    0f, 360f, Color.FromArgb(255, 200, 200, 200));
+                    0f, 360f, emptyDonutColor);
             }
             else
             {
@@ -246,12 +288,41 @@ public class ReportViewerComponent : GH_Component
             }
 
             // Donut outline (always drawn)
-            using (var outlinePen = new Pen(EdgeColor, 1f))
+            using (var outlinePen = new Pen(edgeColor, 1f))
             {
                 var outerRect = new RectangleF(donutCenterX - outerRadius, donutCenterY - outerRadius, outerRadius * 2, outerRadius * 2);
                 var innerRect = new RectangleF(donutCenterX - innerRadius, donutCenterY - innerRadius, innerRadius * 2, innerRadius * 2);
                 graphics.DrawEllipse(outlinePen, outerRect);
                 graphics.DrawEllipse(outlinePen, innerRect);
+            }
+
+            // Inner circle status indicator
+            if (report is not null && report.Total > 0)
+            {
+                var holeRect = new RectangleF(donutCenterX - innerRadius, donutCenterY - innerRadius, innerRadius * 2, innerRadius * 2);
+                bool allPassed = report.Failed == 0 && report.Errors == 0;
+
+                var holeColor = allPassed
+                    ? Color.FromArgb(140, 76, 175, 80)
+                    : Color.FromArgb(140, 229, 57, 53);
+
+                using (var holeBrush = new SolidBrush(holeColor))
+                    graphics.FillEllipse(holeBrush, holeRect);
+
+                string statusText = allPassed ? "OK" : report.Failed.ToString();
+                float fontSize = allPassed ? 11f : statusText.Length switch
+                {
+                    1 => 14f,
+                    2 => 12f,
+                    3 => 9f,
+                    _ => 7f
+                };
+                using var statusFont = new Font("Arial", fontSize, FontStyle.Bold);
+                using var statusBrush = new SolidBrush(Color.White);
+                var textSize = graphics.MeasureString(statusText, statusFont);
+                graphics.DrawString(statusText, statusFont, statusBrush,
+                    donutCenterX - textSize.Width / 2f,
+                    donutCenterY - textSize.Height / 2f);
             }
         }
 
