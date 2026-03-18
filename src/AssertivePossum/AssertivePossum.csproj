@@ -33,7 +33,9 @@
     <EmbeddedResource Include="..\..\assets\icons\icons_report-to-markdown.png" LogicalName="Icons.report-to-markdown.png" />
     <EmbeddedResource Include="..\..\assets\icons\icons_report-to-tap.png" LogicalName="Icons.report-to-tap.png" />
     <EmbeddedResource Include="..\..\assets\icons\icons_runner.png" LogicalName="Icons.runner.png" />
-    <EmbeddedResource Include="..\..\assets\icons\icons-17.png" LogicalName="Icons.report-viewer.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_report-viewer.png" LogicalName="Icons.report-viewer.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_json-to-test-result.png" LogicalName="Icons.json-to-test-result.png" />
+    <EmbeddedResource Include="..\..\assets\icons\icons_test-result-to-json.png" LogicalName="Icons.test-result-to-json.png" />
     <EmbeddedResource Include="..\..\assets\logo_24x24.png" LogicalName="Icons.logo.png" />
   </ItemGroup>
   <Target Name="RenameToGha" AfterTargets="Build">

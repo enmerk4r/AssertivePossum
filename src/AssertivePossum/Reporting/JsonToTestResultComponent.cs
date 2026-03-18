@@ -24,7 +24,8 @@ public class JsonToTestResultComponent : GH_Component
     public override Guid ComponentGuid => new("2B3C4D5E-6F7A-4B8C-9D0E-1F2A3B4C5D6E");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
-    protected override System.Drawing.Bitmap? Icon => null;
+    protected override System.Drawing.Bitmap? Icon =>
+        new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.json-to-test-result.png")!);
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
