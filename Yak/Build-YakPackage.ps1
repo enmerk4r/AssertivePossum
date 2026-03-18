@@ -93,11 +93,13 @@ Write-Host "Output Dir: $OutputDir"
 Write-Host "Dist Dir: $DistDir"
 Write-Host "============================================"
 
-# Create dist folder if it doesn't exist
-if (-not (Test-Path $DistDir)) {
-    Write-Host "Creating directory: $DistDir"
-    New-Item -ItemType Directory -Path $DistDir -Force | Out-Null
+# Clean and (re)create dist folder
+if (Test-Path $DistDir) {
+    Write-Host "Cleaning existing directory: $DistDir"
+    Remove-Item -Path $DistDir -Recurse -Force
 }
+Write-Host "Creating directory: $DistDir"
+New-Item -ItemType Directory -Path $DistDir -Force | Out-Null
 
 # Files to copy
 $FilesToCopy = @(
@@ -161,6 +163,12 @@ try {
     # Copy the 'any' package to linux/compute/packages
     $LinuxDir = Join-Path $YakDir "..\linux\compute\packages"
     if (Test-Path $LinuxDir) {
+        # Remove old .yak packages
+        $oldPackages = Get-ChildItem -Path $LinuxDir -Filter "assertive-possum-*.yak" -ErrorAction SilentlyContinue
+        foreach ($old in $oldPackages) {
+            Write-Host "  Removing old package: $($old.Name)"
+            Remove-Item $old.FullName -Force
+        }
         $anyPackage = $yakFiles | Where-Object { $_.Name -match "-any\.yak$" } | Select-Object -First 1
         if ($anyPackage) {
             Copy-Item $anyPackage.FullName $LinuxDir -Force
