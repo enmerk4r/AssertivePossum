@@ -13,6 +13,8 @@ Unit Tests for Grasshopper files? Easy! Assertive Possum is a testing framework 
 3. Run the unit tests via the CLI or the in-Grasshopper Runner component.
 4. The runner sends the definition (or many-many definitions in a folder) to Rhino.Compute, solves it, scans outputs for test results, and produces a report.
 
+<br>
+
 ![](./assets/gh-runner.gif)
 
 ## Components
@@ -54,6 +56,8 @@ assertive-possum run ./tests --format junit --output results.xml
 # Run in parallel with custom timeout
 assertive-possum run ./tests --parallel 4 --timeout 120
 ```
+
+<br>
 
 ![](./assets/possum-cli.gif)
 
