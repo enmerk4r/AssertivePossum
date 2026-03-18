@@ -28,7 +28,6 @@ internal class Program
         var timeoutOption = new Option<int>("--timeout", () => 60, "Per-file solve timeout in seconds.");
         var parallelOption = new Option<int>("--parallel", () => 1, "Number of files to solve in parallel.");
         var verboseOption = new Option<bool>("--verbose", "Show individual test results even for passing files.");
-        var versionOption = new Option<bool>("--version", "Show version info.");
 
         var runCommand = new Command("run", "Run Grasshopper test definitions via Rhino.Compute.")
         {
@@ -62,19 +61,8 @@ internal class Program
 
         var rootCommand = new RootCommand("Assertive Possum - Integration testing framework for Grasshopper.")
         {
-            runCommand,
-            versionOption
+            runCommand
         };
-
-        rootCommand.SetHandler((InvocationContext ctx) =>
-        {
-            bool showVersion = ctx.ParseResult.GetValueForOption(versionOption);
-            if (showVersion)
-            {
-                Console.WriteLine(GetVersionString());
-                ctx.ExitCode = 0;
-            }
-        });
 
         return await rootCommand.InvokeAsync(args);
     }
@@ -281,11 +269,18 @@ internal class Program
         foreach (var report in reports)
         {
             string name = report.SourceFile ?? "Unknown";
-            string status = report.AllPassed ? "PASS" : "FAIL";
+            string status = report.AllPassed ? "\u001b[32mPASS\u001b[0m" : "\u001b[31mFAIL\u001b[0m";
             int dots = Math.Max(2, maxNameLen - name.Length + 20);
             string dotStr = new string('.', dots);
 
-            Console.WriteLine($"  {name} {dotStr} {status} ({report.Total} test{(report.Total == 1 ? "" : "s")}, {report.TotalTimeMs:F0}ms)");
+            var parts = new List<string>();
+            parts.Add($"{report.Total} test{(report.Total == 1 ? "" : "s")}");
+            if (report.Passed > 0) parts.Add($"\u001b[32m{report.Passed} pass\u001b[0m");
+            if (report.Failed > 0) parts.Add($"\u001b[31m{report.Failed} fail\u001b[0m");
+            if (report.Errors > 0) parts.Add($"\u001b[33m{report.Errors} err\u001b[0m");
+            parts.Add($"{report.TotalTimeMs:F0}ms");
+
+            Console.WriteLine($"  {name} {dotStr} {status} ({string.Join(" | ", parts)})");
 
             // Show failures/errors always; show passes only if verbose
             foreach (var result in report.Results)
@@ -295,24 +290,53 @@ internal class Program
                     string detail = result.Expected is not null
                         ? $"Expected: {result.Expected}  Actual: {result.Actual}"
                         : result.Message ?? "";
-                    Console.WriteLine($"    \u2717 {result.TestName}    {detail}");
+                    Console.WriteLine($"    \u001b[31m\u2717 {result.TestName}    {detail}\u001b[0m");
                 }
                 else if (result.Status == TestStatus.Error)
                 {
-                    Console.WriteLine($"    \u2717 {result.TestName}    {result.Message}");
+                    Console.WriteLine($"    \u001b[31m\u2717 {result.TestName}    {result.Message}\u001b[0m");
                 }
                 else if (verbose)
                 {
-                    Console.WriteLine($"    \u2713 {result.TestName}");
+                    Console.WriteLine($"    \u001b[32m\u2713 {result.TestName}\u001b[0m");
                 }
             }
         }
 
+        // Build plain-text versions of summary lines to measure width
+        string rPassPlain = totalPassed > 0 ? $"{totalPassed} pass" : "0 pass";
+        string rFailPlain = totalFailed > 0 ? $"{totalFailed} fail" : "0 fail";
+        string rErrPlain = totalErrors > 0 ? $"{totalErrors} err" : "0 err";
+        string fPassPlain = filesPassed > 0 ? $"{filesPassed} pass" : "0 pass";
+        string fFailPlain = filesFailed > 0 ? $"{filesFailed} fail" : "0 fail";
+
+        string resultsLine = $"Results: {totalCount} tests | {rPassPlain} | {rFailPlain} | {rErrPlain}";
+        string timeLine = $"Time:    {totalMs:F0}ms";
+        string filesLine = $"Files:   {reports.Count} total | {fPassPlain} | {fFailPlain}";
+
+        bool allPassed = totalFailed == 0 && totalErrors == 0;
+        string verdictLine = allPassed ? "[ ALL TESTS PASS ]" : "[ DID NOT PASS ]";
+
+        int separatorLen = new[] { resultsLine.Length, timeLine.Length, filesLine.Length, verdictLine.Length }.Max();
+        string separator = new string('\u2500', separatorLen);
+
+        // Colored versions
+        string rPass = totalPassed > 0 ? $"\u001b[32m{totalPassed} pass\u001b[0m" : $"\u001b[90m0 pass\u001b[0m";
+        string rFail = totalFailed > 0 ? $"\u001b[31m{totalFailed} fail\u001b[0m" : $"\u001b[90m0 fail\u001b[0m";
+        string rErr = totalErrors > 0 ? $"\u001b[33m{totalErrors} err\u001b[0m" : $"\u001b[90m0 err\u001b[0m";
+        string fPass = filesPassed > 0 ? $"\u001b[32m{filesPassed} pass\u001b[0m" : $"\u001b[90m0 pass\u001b[0m";
+        string fFail = filesFailed > 0 ? $"\u001b[31m{filesFailed} fail\u001b[0m" : $"\u001b[90m0 fail\u001b[0m";
+
         Console.WriteLine();
-        Console.WriteLine("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
-        Console.WriteLine($"Results: {totalPassed} passed, {totalFailed} failed, {totalErrors} errors ({totalCount} total)");
+        Console.WriteLine(separator);
+        Console.WriteLine($"Results: {totalCount} tests | {rPass} | {rFail} | {rErr}");
         Console.WriteLine($"Time:    {totalMs:F0}ms");
-        Console.WriteLine($"Files:   {filesPassed} passed, {filesFailed} failed ({reports.Count} total)");
+        Console.WriteLine($"Files:   {reports.Count} total | {fPass} | {fFail}");
+        Console.WriteLine(separator);
+        if (allPassed)
+            Console.WriteLine($"\u001b[32m{verdictLine}\u001b[0m");
+        else
+            Console.WriteLine($"\u001b[31m{verdictLine}\u001b[0m");
     }
 
     private static string SerializeTap(List<TestReport> reports)
