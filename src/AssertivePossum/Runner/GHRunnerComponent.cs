@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Grasshopper.Kernel;
+using Rhino;
 using AssertivePossum.Goo;
 
 namespace AssertivePossum.Components.Runner;
@@ -74,13 +75,16 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
 
             Message = $"Running {files.Count} files...";
 
+            var component = this;
             var task = Task.Run(async () =>
             {
                 var results = new SolveResults();
                 using var client = new ComputeClient(server);
+                int total = files.Count;
 
-                foreach (string file in files)
+                for (int i = 0; i < files.Count; i++)
                 {
+                    string file = files[i];
                     var response = await client.PostDefinitionAsync(file);
                     var testResults = ComputeClient.DeserializeTestResults(response);
 
@@ -107,6 +111,19 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
                     }
 
                     results.Reports.Add(report);
+
+                    // Update progress on UI thread
+                    string status = report.AllPassed ? "PASS" : "FAIL";
+                    string msg = i < total - 1
+                        ? $"{i + 1}/{total} [{status}]"
+                        : (results.Reports.All(r => r.AllPassed)
+                            ? "ALL PASSED"
+                            : $"{results.Reports.Sum(r => r.Failed + r.Errors)} FAILURES");
+                    RhinoApp.InvokeOnUiThread(() =>
+                    {
+                        component.Message = msg;
+                        component.OnDisplayExpired(true);
+                    });
                 }
 
                 results.AllPassed = results.Reports.All(r => r.AllPassed);
@@ -131,7 +148,9 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
         DA.SetData(1, solveResults.Summary);
         DA.SetData(2, solveResults.AllPassed);
 
-        Message = solveResults.AllPassed ? "ALL PASSED" : "FAILURES";
+        Message = solveResults.AllPassed
+            ? "ALL PASSED"
+            : $"{solveResults.Reports.Sum(r => r.Failed + r.Errors)} FAILURES";
     }
 
     private static List<string> EnumerateGhFiles(string source)
