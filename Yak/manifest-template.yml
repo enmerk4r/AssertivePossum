@@ -8,6 +8,7 @@ description: >
   execute them against a Rhino.Compute instance, and collect structured pass/fail
   reports. Includes assertion components, a test runner, and report exporters
   (JUnit XML, TAP, JSON, Markdown).
+icon: icon.png
 keywords:
 - testing
 - test

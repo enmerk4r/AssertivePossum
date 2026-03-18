@@ -119,6 +119,15 @@ foreach ($file in $FilesToCopy) {
     }
 }
 
+# Copy icon
+$IconSource = Join-Path $YakDir "..\assets\logo_64x64.png"
+if (Test-Path $IconSource) {
+    Write-Host "  Copying: icon.png"
+    Copy-Item $IconSource (Join-Path $DistDir "icon.png") -Force
+} else {
+    Write-Warning "  Icon not found: $IconSource"
+}
+
 # Generate manifest.yml from template
 Write-Host ""
 Write-Host "Generating manifest.yml from template..."
