@@ -101,7 +101,7 @@ if (-not (Test-Path $DistDir)) {
 
 # Files to copy
 $FilesToCopy = @(
-    "AssertivePossum.Components.gha",
+    "AssertivePossum.gha",
     "AssertivePossum.Goo.dll"
 )
 

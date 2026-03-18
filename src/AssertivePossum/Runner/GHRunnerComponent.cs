@@ -34,7 +34,7 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddGenericParameter("Reports", "Rp", "One TestReport per .gh file.", GH_ParamAccess.list);
+        pManager.AddGenericParameter("Reports", "R", "One TestReport per .gh file.", GH_ParamAccess.list);
         pManager.AddTextParameter("Summary", "Su", "Human-readable summary.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("AllPassed", "AP", "True only if every test in every file passed.", GH_ParamAccess.item);
     }
