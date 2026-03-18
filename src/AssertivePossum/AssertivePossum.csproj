@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AssertivePossum.Components</RootNamespace>
     <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
+    <FileVersion>0.1.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
 <PackageReference Include="Grasshopper" Version="8.0.23304.9001">
@@ -18,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\assets\icons\icons_assert-contains.png" LogicalName="Icons.assert-contains.png" />
-    <EmbeddedResource Include="..\..\assets\icons\icons_assert-elapsed-time.png" LogicalName="Icons.assert-elapsed-time.png" />
     <EmbeddedResource Include="..\..\assets\icons\icons_assert-equal.png" LogicalName="Icons.assert-equal.png" />
     <EmbeddedResource Include="..\..\assets\icons\icons_assert-false.png" LogicalName="Icons.assert-false.png" />
     <EmbeddedResource Include="..\..\assets\icons\icons_assert-geometry-valid.png" LogicalName="Icons.assert-geometry-valid.png" />

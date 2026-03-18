@@ -17,7 +17,7 @@ Unit Tests for Grasshopper files? Easy! Assertive Possum is a testing framework 
 
 ## Components
 
-**Assertions** — `AssertEqual`, `AssertNotEqual`, `AssertTrue`, `AssertFalse`, `AssertNull`, `AssertNotNull`, `AssertListLength`, `AssertContains`, `AssertInRange`, `AssertGeometryValid`, `AssertElapsedTime`
+**Assertions** — `AssertEqual`, `AssertNotEqual`, `AssertTrue`, `AssertFalse`, `AssertNull`, `AssertNotNull`, `AssertListLength`, `AssertContains`, `AssertInRange`, `AssertGeometryValid`
 
 **Reporting** — `ReportViewer`, `ReportToJUnit`, `ReportToTAP`, `ReportToJSON`, `ReportToMarkdown`, `JsonToTestResult`, `TestResultToJson`
 

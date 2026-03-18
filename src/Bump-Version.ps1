@@ -18,6 +18,8 @@ foreach ($proj in $projects) {
     }
     $content = Get-Content $proj -Raw
     $content = $content -replace '<Version>[^<]*</Version>', "<Version>$Version</Version>"
+    $content = $content -replace '<AssemblyVersion>[^<]*</AssemblyVersion>', "<AssemblyVersion>$Version</AssemblyVersion>"
+    $content = $content -replace '<FileVersion>[^<]*</FileVersion>', "<FileVersion>$Version</FileVersion>"
     Set-Content $proj $content -NoNewline
     Write-Host "  $(Split-Path -Leaf $proj) -> $Version"
 }

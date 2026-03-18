@@ -14,8 +14,14 @@ public class AssertivePossumInfo : GH_AssemblyInfo
 
     public override Guid Id => new("A1B2C3D4-E5F6-4A8B-9C0D-1E2F3A4B5C6D");
 
-    public override string Version => Assembly.GetExecutingAssembly()
-        .GetName().Version?.ToString() ?? "1.0.0";
+    public override string Version
+    {
+        get
+        {
+            var v = Assembly.GetExecutingAssembly().GetName().Version;
+            return v is not null ? $"{v.Major}.{v.Minor}.{v.Build}" : "0.1.0";
+        }
+    }
 
     public override Bitmap? Icon =>
         new Bitmap(typeof(AssertivePossumInfo).Assembly.GetManifestResourceStream("Icons.logo.png")!);
