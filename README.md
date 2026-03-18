@@ -13,6 +13,8 @@ Unit Tests for Grasshopper files? Easy! Assertive Possum is a testing framework 
 3. Run the unit tests via the CLI or the in-Grasshopper Runner component.
 4. The runner sends the definition (or many-many definitions in a folder) to Rhino.Compute, solves it, scans outputs for test results, and produces a report.
 
+![](./assets/gh-runner.gif)
+
 ## Components
 
 **Assertions** — `AssertEqual`, `AssertNotEqual`, `AssertTrue`, `AssertFalse`, `AssertNull`, `AssertNotNull`, `AssertListLength`, `AssertContains`, `AssertInRange`, `AssertGeometryValid`, `AssertElapsedTime`
@@ -40,7 +42,7 @@ assertive-possum run <path> [options]
 
 **Exit codes:** `0` = all passed, `1` = failures, `2` = error
 
-### Examples
+### CLI Examples
 
 ```bash
 # Run all tests in a folder
@@ -52,6 +54,8 @@ assertive-possum run ./tests --format junit --output results.xml
 # Run in parallel with custom timeout
 assertive-possum run ./tests --parallel 4 --timeout 120
 ```
+
+![](./assets/possum-cli.gif)
 
 ## Prerequisites
 
@@ -79,3 +83,6 @@ All three projects share the same version. Bump them together:
 ```powershell
 .\src\Bump-Version.ps1 0.2.0
 ```
+
+## Examples
+Check out example files [here](./examples/)
