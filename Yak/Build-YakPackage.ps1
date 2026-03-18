@@ -101,6 +101,29 @@ if (Test-Path $DistDir) {
 Write-Host "Creating directory: $DistDir"
 New-Item -ItemType Directory -Path $DistDir -Force | Out-Null
 
+# Publish CLI into a temporary folder so the Yak package always includes it.
+$RepoRoot = Resolve-Path (Join-Path $ProjectDir "..\..")
+$CliProject = Join-Path $RepoRoot "src\AssertivePossum.CLI\AssertivePossum.CLI.csproj"
+$CliPublishDir = Join-Path $DistDir "_cli-publish"
+
+if (Test-Path $CliProject) {
+    Write-Host "Publishing CLI..."
+    $publishArgs = @(
+        "publish",
+        $CliProject,
+        "-c", $Configuration,
+        "-o", $CliPublishDir
+    )
+
+    & dotnet @publishArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "CLI publish failed with exit code: $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
+} else {
+    Write-Warning "CLI project not found: $CliProject"
+}
+
 # Files to copy
 $FilesToCopy = @(
     "AssertivePossum.gha",
@@ -117,6 +140,29 @@ foreach ($file in $FilesToCopy) {
     } else {
         Write-Warning "  File not found: $sourcePath"
     }
+}
+
+# Copy CLI runtime files, preserving resource subfolders and skipping symbols.
+if (Test-Path $CliPublishDir) {
+    Write-Host "Copying CLI files to dist folder..."
+    $resolvedCliPublishDir = (Resolve-Path $CliPublishDir).Path
+    $cliFiles = Get-ChildItem -Path $CliPublishDir -Recurse -File |
+        Where-Object { $_.Extension -ne ".pdb" }
+
+    foreach ($cliFile in $cliFiles) {
+        $relativePath = $cliFile.FullName.Substring($resolvedCliPublishDir.Length + 1)
+        $destinationPath = Join-Path $DistDir $relativePath
+        $destinationDir = Split-Path $destinationPath -Parent
+
+        if (-not (Test-Path $destinationDir)) {
+            New-Item -ItemType Directory -Path $destinationDir -Force | Out-Null
+        }
+
+        Write-Host "  Copying: $relativePath"
+        Copy-Item $cliFile.FullName $destinationPath -Force
+    }
+
+    Remove-Item -Path $CliPublishDir -Recurse -Force
 }
 
 # Copy icon
@@ -141,8 +187,8 @@ if (Test-Path $TemplateFile) {
     exit 1
 }
 
-# Run yak build for both platforms (win and any)
-$Platforms = @("win", "any")
+# Run yak build (any platform — pure .NET, no native dependencies)
+$Platforms = @("any")
 
 Push-Location $DistDir
 try {

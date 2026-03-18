@@ -26,7 +26,26 @@ Unit Tests for Grasshopper files? Easy! Assertive Possum is a testing framework 
 **Runner** — `GHRunner` (in-Grasshopper test runner)
 
 ## CLI Usage
-To use the CLI, make sure to either run the `assertive-possum` command from the directory where the plugin is installed, or just add that directory to PATH.
+The Yak package now includes the CLI alongside the Grasshopper plugin files. On Windows you can run `assertive-possum.exe` from the package install directory, or add that directory to PATH. On other platforms, invoke `dotnet assertive-possum.dll`.
+
+If you installed Assertive Possum through Yak on Windows, the CLI will typically be located at:
+
+```text
+%APPDATA%\McNeel\Rhinoceros\packages\8.0\assertive-possum\<version>\
+```
+
+Example:
+
+```powershell
+Set-Location "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.1"
+.\assertive-possum.exe run "C:\path\to\your\tests" --server http://localhost:6500 --verbose
+```
+
+You can also run it without changing directories:
+
+```powershell
+& "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.1\assertive-possum.exe" run "C:\path\to\your\tests" --server http://localhost:6500 --verbose
+```
 
 ```
 assertive-possum run <path> [options]
