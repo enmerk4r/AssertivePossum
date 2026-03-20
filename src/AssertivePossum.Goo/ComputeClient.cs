@@ -13,7 +13,7 @@ public sealed class ComputeClient : IDisposable
     private readonly HttpClient _http;
     private readonly string _serverUrl;
 
-    public ComputeClient(string serverUrl, TimeSpan? timeout = null)
+    public ComputeClient(string serverUrl, TimeSpan? timeout = null, string? apiKey = null)
     {
         _serverUrl = serverUrl.TrimEnd('/');
         _http = new HttpClient
@@ -22,6 +22,8 @@ public sealed class ComputeClient : IDisposable
         };
         _http.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            _http.DefaultRequestHeaders.Add("RhinoComputeKey", apiKey);
     }
 
     /// <summary>

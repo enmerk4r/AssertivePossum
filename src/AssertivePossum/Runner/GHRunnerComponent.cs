@@ -11,7 +11,7 @@ using AssertivePossum.Goo;
 
 namespace AssertivePossum.Components.Runner;
 
-public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.SolveResults>
+public class GHRunnerComponent : GH_Component
 {
     private readonly object _runLock = new();
     private Task? _activeRunTask;
@@ -38,6 +38,8 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
     {
         pManager.AddTextParameter("Source", "S", "Path to a .gh file or folder of .gh files.", GH_ParamAccess.item);
         pManager.AddTextParameter("Server", "Sv", "Rhino.Compute server URL.", GH_ParamAccess.item, "http://localhost:6500");
+        pManager.AddTextParameter("API Key", "K", "API key for Rhino.Compute (RhinoComputeKey header).", GH_ParamAccess.item);
+        pManager[2].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "Set to true to execute tests.", GH_ParamAccess.item, false);
     }
 
@@ -59,11 +61,13 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
     {
         string? source = null;
         string server = "http://localhost:6500";
+        string? apiKey = null;
         bool run = false;
 
         if (!DA.GetData(0, ref source)) return;
         DA.GetData(1, ref server);
-        DA.GetData(2, ref run);
+        DA.GetData(2, ref apiKey);
+        DA.GetData(3, ref run);
 
         if (!run)
         {
@@ -79,7 +83,7 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
             return;
         }
 
-        string runKey = $"{Path.GetFullPath(source!)}|{server}";
+        string runKey = $"{Path.GetFullPath(source!)}|{server}|{apiKey}";
         bool shouldStartRun = false;
         int runVersion = 0;
         SolveResults? solveResults;
@@ -113,7 +117,7 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
 
         if (shouldStartRun)
         {
-            StartRun(runVersion, runKey, server, files);
+            StartRun(runVersion, runKey, server, apiKey, files);
             statusMessage = $"0/{files.Count} [RUNNING]";
         }
 
@@ -144,9 +148,9 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
         Attributes?.ExpireLayout();
     }
 
-    private void StartRun(int runVersion, string runKey, string server, List<string> files)
+    private void StartRun(int runVersion, string runKey, string server, string? apiKey, List<string> files)
     {
-        var task = Task.Run(() => RunTestsAsync(runVersion, runKey, server, files));
+        var task = Task.Run(() => RunTestsAsync(runVersion, runKey, server, apiKey, files));
         lock (_runLock)
         {
             if (runVersion == _runVersion && _activeRunKey == runKey)
@@ -156,10 +160,10 @@ public class GHRunnerComponent : GH_TaskCapableComponent<GHRunnerComponent.Solve
         }
     }
 
-    private async Task RunTestsAsync(int runVersion, string runKey, string server, List<string> files)
+    private async Task RunTestsAsync(int runVersion, string runKey, string server, string? apiKey, List<string> files)
     {
         var results = new SolveResults();
-        using var client = new ComputeClient(server);
+        using var client = new ComputeClient(server, apiKey: apiKey);
         int total = files.Count;
 
         try

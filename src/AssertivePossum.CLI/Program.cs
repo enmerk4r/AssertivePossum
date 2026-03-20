@@ -21,6 +21,7 @@ internal class Program
         var pathArgument = new Argument<string>("path", "Path to a .gh file or folder of .gh files.");
 
         var serverOption = new Option<string>("--server", () => "http://localhost:6500", "Rhino.Compute server URL.");
+        var apiKeyOption = new Option<string?>("--apikey", "API key for Rhino.Compute (RhinoComputeKey header).");
         var formatOption = new Option<string>("--format", () => "text", "Output format: text, junit, tap, json, markdown.");
         var outputOption = new Option<string?>("--output", "Write report to file instead of stdout.");
         var recurseOption = new Option<bool>("--recurse", () => true, "Recurse into subfolders.");
@@ -33,6 +34,7 @@ internal class Program
         {
             pathArgument,
             serverOption,
+            apiKeyOption,
             formatOption,
             outputOption,
             recurseOption,
@@ -46,6 +48,7 @@ internal class Program
         {
             string path = ctx.ParseResult.GetValueForArgument(pathArgument);
             string server = ctx.ParseResult.GetValueForOption(serverOption)!;
+            string? apiKey = ctx.ParseResult.GetValueForOption(apiKeyOption);
             string format = ctx.ParseResult.GetValueForOption(formatOption)!;
             string? output = ctx.ParseResult.GetValueForOption(outputOption);
             bool recurse = ctx.ParseResult.GetValueForOption(recurseOption);
@@ -56,7 +59,7 @@ internal class Program
 
             if (noRecurse) recurse = false;
 
-            ctx.ExitCode = await RunTests(path, server, format, output, recurse, timeout, parallel, verbose);
+            ctx.ExitCode = await RunTests(path, server, apiKey, format, output, recurse, timeout, parallel, verbose);
         });
 
         var rootCommand = new RootCommand("Assertive Possum - Integration testing framework for Grasshopper.")
@@ -68,7 +71,7 @@ internal class Program
     }
 
     private static async Task<int> RunTests(
-        string path, string server, string format, string? output,
+        string path, string server, string? apiKey, string format, string? output,
         bool recurse, int timeout, int parallel, bool verbose)
     {
         string version = GetVersionString();
@@ -99,7 +102,7 @@ internal class Program
         var reports = new List<TestReport>();
         var totalStopwatch = Stopwatch.StartNew();
 
-        using var client = new ComputeClient(server, TimeSpan.FromSeconds(timeout));
+        using var client = new ComputeClient(server, TimeSpan.FromSeconds(timeout), apiKey);
 
         try
         {
