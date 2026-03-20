@@ -37,14 +37,14 @@ If you installed Assertive Possum through Yak on Windows, the CLI will typically
 Example:
 
 ```powershell
-Set-Location "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.1"
+Set-Location "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.2"
 .\assertive-possum.exe run "C:\path\to\your\tests" --server http://localhost:6500 --verbose
 ```
 
 You can also run it without changing directories:
 
 ```powershell
-& "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.1\assertive-possum.exe" run "C:\path\to\your\tests" --server http://localhost:6500 --verbose
+& "$env:APPDATA\McNeel\Rhinoceros\packages\8.0\assertive-possum\0.1.2\assertive-possum.exe" run "C:\path\to\your\tests" --server http://localhost:6500 --verbose
 ```
 
 ```
@@ -54,6 +54,7 @@ assertive-possum run <path> [options]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--server <url>` | `http://localhost:6500` | Rhino.Compute server URL |
+| `--apikey <key>` | — | API key for Rhino.Compute (`RhinoComputeKey` header) |
 | `--format <fmt>` | `text` | Output format: `text`, `junit`, `tap`, `json`, `markdown` |
 | `--output <file>` | stdout | Write report to file |
 | `--recurse` / `--no-recurse` | `--recurse` | Recurse into subfolders |
@@ -79,6 +80,14 @@ assertive-possum run ./tests --parallel 4 --timeout 120
 <br>
 
 ![](./assets/possum-cli.gif)
+
+## Authentication
+
+If your Rhino.Compute instance is configured with an API key (via the `RHINO_COMPUTE_KEY` environment variable), pass it to the CLI with `--apikey` or use the **API Key** input on the GH Runner component. The key is sent as a `RhinoComputeKey` HTTP header with each request.
+
+```bash
+assertive-possum run ./tests --server http://localhost:5000 --apikey yourkey
+```
 
 ## Prerequisites
 
