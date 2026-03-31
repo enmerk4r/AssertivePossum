@@ -124,12 +124,11 @@ internal class Program
         totalStopwatch.Stop();
         double totalMs = totalStopwatch.Elapsed.TotalMilliseconds;
 
-        // Handle output based on format
-        if (format.Equals("text", StringComparison.OrdinalIgnoreCase))
-        {
-            PrintTextOutput(reports, verbose, totalMs);
-        }
-        else
+        // Always print human-readable results to console
+        PrintTextOutput(reports, verbose, totalMs);
+
+        // If a structured format was requested, serialize and write to file or stdout
+        if (!format.Equals("text", StringComparison.OrdinalIgnoreCase))
         {
             string serialized = format.ToLowerInvariant() switch
             {
@@ -147,7 +146,8 @@ internal class Program
                     Directory.CreateDirectory(dir);
 
                 await File.WriteAllTextAsync(output, serialized);
-                Console.WriteLine($"Report written to {output}");
+                Console.WriteLine();
+                Console.WriteLine($"Test report written to {output}");
             }
             else
             {
@@ -212,6 +212,7 @@ internal class Program
 
             if (testResults.Count > 0)
             {
+                TestReport.FailDuplicateNames(testResults);
                 report.Results.AddRange(testResults);
             }
             else

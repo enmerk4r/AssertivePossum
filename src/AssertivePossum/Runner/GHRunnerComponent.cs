@@ -183,6 +183,7 @@ public class GHRunnerComponent : GH_Component
 
                 if (testResults.Count > 0)
                 {
+                    TestReport.FailDuplicateNames(testResults);
                     report.Results.AddRange(testResults);
                     report.TotalTimeMs = testResults.Sum(r => r.ElapsedMs);
                 }

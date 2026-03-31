@@ -20,6 +20,8 @@ public class AssertContainsComponent : GH_Component
     public override Guid ComponentGuid => new("a1b2c3d4-0008-4000-8000-000000000008");
     public override GH_Exposure Exposure => GH_Exposure.quarternary;
 
+    public override void CreateAttributes() => m_attributes = new AssertComponentAttributes(this);
+
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-contains.png")!);
 

@@ -18,6 +18,8 @@ public class AssertNotNullComponent : GH_Component
     public override Guid ComponentGuid => new("a1b2c3d4-0006-4000-8000-000000000006");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
+    public override void CreateAttributes() => m_attributes = new AssertComponentAttributes(this);
+
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-not-null.png")!);
 

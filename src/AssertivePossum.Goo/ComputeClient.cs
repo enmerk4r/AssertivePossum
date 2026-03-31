@@ -68,8 +68,18 @@ public sealed class ComputeClient : IDisposable
         if (!response.TryGetProperty("values", out var values))
             return results;
 
+        // Track output parameter names to detect duplicate Context Print components.
+        var outputNames = new List<string>();
+
         foreach (var output in values.EnumerateArray())
         {
+            string? paramName = null;
+            if (output.TryGetProperty("ParamName", out var pn))
+                paramName = pn.GetString();
+
+            if (paramName is not null)
+                outputNames.Add(paramName);
+
             if (!output.TryGetProperty("InnerTree", out var innerTree))
                 continue;
 
@@ -84,6 +94,39 @@ public sealed class ComputeClient : IDisposable
                     var result = TryParseTestResult(dataStr);
                     if (result is not null)
                         results.Add(result);
+                }
+            }
+        }
+
+        // Detect duplicate Context Print output names. When two Context Print
+        // components share a name, Compute merges them into a single output
+        // and we silently lose one test result. Flag any result whose test name
+        // matches a duplicated output name so the author knows to fix it.
+        var duplicateOutputNames = outputNames
+            .GroupBy(n => n, StringComparer.Ordinal)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (duplicateOutputNames.Count > 0)
+        {
+            // Build a set of bare names (strip "RH_OUT:" prefix if present).
+            var bareDuplicates = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var name in duplicateOutputNames)
+            {
+                bareDuplicates.Add(name);
+                if (name.StartsWith("RH_OUT:", StringComparison.Ordinal))
+                    bareDuplicates.Add(name.Substring("RH_OUT:".Length));
+            }
+
+            foreach (var result in results)
+            {
+                if (bareDuplicates.Contains(result.TestName))
+                {
+                    result.Status = TestStatus.Fail;
+                    result.Message = $"Duplicate Context Print output name '{result.TestName}'. "
+                        + "Each Context Print component must have a unique name. "
+                        + "One or more test results may have been lost.";
                 }
             }
         }

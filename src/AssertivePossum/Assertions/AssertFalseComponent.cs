@@ -16,6 +16,8 @@ public class AssertFalseComponent : GH_Component
 
     public override Guid ComponentGuid => new("a1b2c3d4-0004-4000-8000-000000000004");
 
+    public override void CreateAttributes() => m_attributes = new AssertComponentAttributes(this);
+
     protected override System.Drawing.Bitmap? Icon =>
         new System.Drawing.Bitmap(GetType().Assembly.GetManifestResourceStream("Icons.assert-false.png")!);
 
